@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>  
+    <head>
+        <title>Tab Crunch Settings</title>
+        <link rel="stylesheet" type="text/css" href="styles_options.css"/>
+        <script src="options.js"></script>
+    </head>
+
+    <body>
+        <div class="titleBar">
+            <image src="tab.png"/>
+            <h1>Tab Crunch Settings</h1>
+        </div>
+
+        <div class="tab">
+            <button id="settingsBtn" class="tabLinks">Settings</button>
+            <button id= "closedBtn" class="tabLinks">Closed</button>
+            <button id="domainsBtn" class="tabLinks">Domains</button>
+            <button id="pinnedBtn" class="tabLinks">Pinned</button>
+        </div>
+
+        <div id="settingsPage" class="tabContent">
+            <table class="settings">
+                <tr>
+                    <td class="setting">Close inactive tabs after:</td>
+                    <td class="setInput">
+                        <input id="closeTime" class="text" type="text">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="setting">Autoclose after # tabs:</td>
+                    <td class="setInput">
+                        <input id="autoCloseNum" class="text" type="text">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="setting">Sort tabs alphabeticly:</td>
+                    <td class="setInput">
+                        <input id="sortTabs" class="check" type="checkbox">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="setting">Enable notifications:</td>
+                    <td class="setInput">
+                        <input id="notifications" class="check" type="checkbox">
+                    </td>
+                </tr>
+            </table>
+            <button id="saveBtn">Save</button>
+            <button id="cancelBtn">Cancel</button>
+        </div>
+
+        <div id="closedPage" class="tabContent">
+            <table id="closedTabs">
+            </table>
+        </div>
+
+        <div id="domainsPage" class="tabContent">
+            <table id="domainList">
+            </table>
+        </div>
+
+        <div id="pinnedPage" class="tabContent">
+            <table id="pinnedTabs">
+                
+            </table>
+        </div>
+    </body>
+</html>

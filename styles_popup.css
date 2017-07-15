@@ -1,0 +1,27 @@
+* {
+    font-family: "Arial";
+}
+
+.tc-wrapper {
+    width: 50%;
+}
+
+.header {
+    border-bottom: thin dotted #B2BEB5;
+    margin: 0px;
+    padding: 0 0 10px 0;
+}
+
+.header img {
+    float: left;
+    height: 35px;
+    padding: 0 15px 0 15px;
+    width: 35px;
+    margin: 0px;
+}
+
+.header h1 {
+    color:#007FFF;
+    margin: 0px;
+}
+
