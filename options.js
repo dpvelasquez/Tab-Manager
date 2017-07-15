@@ -139,6 +139,13 @@ document.addEventListener('DOMContentLoaded', function () {
             removeButtons[i].removeEventListener('click', removePinned);
         }
 
+        chrome.runtime.sendMessage({type:"tabs"}, function (openedTabs) {
+            for (var i=0, oTLen=openedTabs.length; i < oTlen; i++) {
+                if (openedTabs[i].pinned) {
+                    
+                }
+            }
+        });
         
         // Get pinned tabs
         function removePinned(evt) {
