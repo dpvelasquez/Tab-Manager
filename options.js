@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("settingsPage").style.display = "block";
         settingsBtn.className += " active";
         // Get saved settings
-        chrome.storage.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
+        chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
             document.getElementById("closeTime").value = items.inactiveTime;
             document.getElementById("autoCloseNum").value = items.closeTabsNum;
             document.getElementById("sortTabs").checked = items.sortTabs;
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Get closed tabs
-        chrome.runtime.sendMessage({type:"closed", value:true}, function (closed) {
+        chrome.runtime.sendMessage({type:"closed"}, function (closed) {
             for (var i=0, cLen=closed.length; i < cLen; i++) {
                 (function () {
                     var row = document.getElementById("closedTabs").insertRow(0);
@@ -58,18 +58,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     reloadButton.innerHTML = "Reload";
                     row.appendChild(reloadButton);
                     reloadButton.addEventListener('click', reloadPage);
-                    reloadButton.closed = closed;
-                    reloadButton.title = closed[i].tabTitle;
+                    reloadButton.Url = closed[i].tabUrl;
                     reloadButton.row = row;
                 })();
             }
         });
 
         function reloadPage(evt) {
-            var index = evt.target.closed.map(function(e) {
-                return e.tabTitle 
-            }).indexOf(evt.target.title);
-            chrome.runtime.sendMessage({type:"reload", value:index});
+            chrome.runtime.sendMessage({type:"reload", value:evt.target.Url});
             document.getElementById("closedTabs").removeChild(evt.target.row);
             evt.target.removeEventListener('click', reloadPage);
         }
@@ -116,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var index = evt.target.domains.indexOf(evt.target.domainUrl);
             evt.target.domains.splice(index, 1);
             chrome.storage.sync.set({"domains":evt.target.domains});
-            chrome.runtime.sendMessage({type:"update", value:true});
+            chrome.runtime.sendMessage({type:"update"});
             document.getElementById("domainList").removeChild(evt.target.row);
             evt.target.removeEventListener('click', removeDomain);
         }
@@ -139,17 +135,30 @@ document.addEventListener('DOMContentLoaded', function () {
             removeButtons[i].removeEventListener('click', removePinned);
         }
 
+        // Get pinned tabs
         chrome.runtime.sendMessage({type:"tabs"}, function (openedTabs) {
             for (var i=0, oTLen=openedTabs.length; i < oTlen; i++) {
                 if (openedTabs[i].pinned) {
-                    
+                    (function () {
+                        var row = document.getElementById("pinnedTabs").insertRow(0);
+                        var pinnedCell = row.insertCell(0);
+                        pinnedCell.innerHTML = openedTabs[i].url;
+                        var removeButton = document.createElement('input');
+                        removeButton.type = "button";
+                        removeButton.innerHTML = "Remove";
+                        row.appendChild(removeButton);
+                        removeButton.addEventListener('click', removePinned);
+                        removeButton.tabId = openedTabs[i].tabId;
+                        removeButton.row = row;
+                    })();
                 }
             }
         });
         
-        // Get pinned tabs
         function removePinned(evt) {
-
+            chrome.runtime.sendMessage({type:"unpin", value:evt.target.tabId});
+            document.getElementById("pinnedTabs").removeChild(evt.target.row);
+            evt.target.removeEventListener('click', removeDomain);
         }
     });
     
@@ -164,11 +173,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var notifications = document.getElementById("notifications").checked;
         chrome.storage.sync.set({"inactiveTime":closeTime, "closeTabsNum":autoCloseNum,
                                 "sortTabs":sortTabs, "notifications":notifications});
-        chrome.runtime.sendMessage({type:"update", value:true});
+        chrome.runtime.sendMessage({type:"update"});
     });
 
     document.getElementById("cancelBtn").addEventListener('click', function() {
-        chrome.storage.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
+        chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
             document.getElementById("closeTime").value = items.inactiveTime;
             document.getElementById("autoCloseNum").value = items.closeTabsNum;
             document.getElementById("sortTabs").checked = items.sortTabs;
@@ -176,6 +185,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    //Closed tab events
-    
+    // Domain Tab events
+    document.getElementById("addDomainBtn").addEventListener('click', function() {
+        var domainPrompt = prompt("Enter a valid url:" );
+        if (domainPrompt != null) {
+            var domainFormatted = domainPrompt.replace("www.", "").replace(/^https?:\/\//,"");
+            var domainUrl = new URL("http://" + domainFormatted).hostname;
+            chrome.storage.sync.get("domains", function (items) {
+                domains = items["domains"];
+                if (domains.indexOf(domainUrl) == -1) {
+                    domains.push(domainUrl);
+                    chrome.storage.sync.set({"domains":domains}, function() {
+                        chrome.runtime.sendMessage({type:"update"});
+                    });
+                } else {
+                    alert (domainUrl + "has already been whitelisted");
+                }
+            });
+        }
+    });
 });

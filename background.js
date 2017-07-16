@@ -8,11 +8,11 @@
         this.tabTitle = tabTitle;
         this.pin = pin;
         this.timeout = function () {
-            var domain = (new URL(this.tabUrl)).hostname;
+            var domain = (new URL(this.tabUrl)).hostname.replace("www.","");
             if (!this.pin && (tabs.length >= closeTabsNum) && (domains.indexOf(domain) == -1)) {
                 this.timeoutId = setTimeout(function () {
                     chrome.tabs.remove(tabId);
-                    closed.pushed({tabUrl:this.tabUrl, tabIcon:this.tabIcon, tabTitle:this.tabTitle});
+                    closed.push({tabUrl:this.tabUrl, tabIcon:this.tabIcon, tabTitle:this.tabTitle});
                     if (notifications) {
                         chrome.notifications.create("", {
                             type:"basic",
@@ -86,9 +86,9 @@
                         currentTab = foundTab;
                     }
                 }
+                sortTabsAlpha();
             });
         });
-        sortTabsAlpha();
     });
 
     // Change timers upon activation
@@ -108,8 +108,8 @@
                 currentTab = new tab(activeTab.id, activeTab.url, activeTab.favIconUrl,
                                         activeTab.title, false);
                 tabs.push(currentTab);
+                sortTabsAlpha();
             });
-            sortTabsAlpha();
         }
     });
 
@@ -126,7 +126,6 @@
                 break;
             }
         }
-        sortTabsAlpha();
     });
 
     // Update current tab when user changes window
@@ -145,18 +144,18 @@
 
     // Update url and pin status when user changes tab state
     chrome.tabs.onUpdated.addListener(function (tabId, info, tab) {
-        if ((info.status == "complete" && info.url != undefined) || info.pinned != undefined) {
+        if (info.status == "complete" || info.pinned != undefined) {
             for (var i=0, tLen=tabs.length; i < tLen; i++) {
                 if (tabs[i].tabId == tabId) {
-                    if (info.status == "complete" && info.url != undefined) {
+                    if (info.status == "complete" && tab.url != undefined) {
                         var prevDomain = (new URL(tabs[i].tabUrl)).hostname;
-                        var currentDomain = (new URL(info.url)).hostname;
+                        var currentDomain = (new URL(tab.url)).hostname;
                         if (domains.indexOf(currentDomain) > -1) {
                             tabs[i].haltTimeout();
                         } else if (domains.indexOf(prevDomain) > -1) {
                             tabs[i].timeout();
                         }
-                        tabs[i].tabUrl = info.url;
+                        tabs[i].tabUrl = tab.url;
                         tabs[i].tabIcon = tab.favIconUrl;
                         tabs[i].tabTitle = tab.title;
                         sortTabsAlpha();
@@ -212,10 +211,11 @@
     Receive messages from options and popup page:
     Supports types:
         - {type:"pin", value:boolean}: Sets the current tab to value changing the tabs timeout ability.
-        - {type:"relaod", value:index}: Reloads the tab from the closed list at value, index.
         - {type:"update"}: Retrieves updated chrome storage settings.
         - {type:"closed"}: Sends the sender list of closed tabs.
-        - {type:"tabs"}: Retrieves opened tabs.
+        - {type:"reload", value:tabUrl}: Creates tab with url tabUrl.
+        - {type: "unpin", value:tabId}: unpins a tab with value tabId.
+        - {type:"tabs"}: Sends the sender list of opened tabs.
     */
     chrome.runtime.onMessage.addListener(function (request, sender, respond) {
         if (request.type == "pin") {
@@ -251,8 +251,14 @@
                     }
                 }
             });
-        } else if (request.type == "closed"){
+        } else if (request.type == "closed") {
             respond(closed);
+        } else if (request.type == "reload") {
+
+        } else if (request.type == "unpin") {
+
+        } else if (request.type == "tabs") {
+            respond(tabs);
         }
     });
 
@@ -260,16 +266,18 @@
     function sortTabsAlpha() {
         if (sortTabs) {
             tabs.sort(function (tab_1, tab_2) {
-                if (tab_1.tabUrl < tab_2.tabUrl) {
+                tab_1Url = tab_1.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
+                tab_2Url = tab_2.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
+                if (tab_1Url < tab_2Url) {
                     return -1;
                 } 
-                if (tab_1.tabUrl > tab_2.tabUrl) {
+                if (tab_1Url> tab_2Url) {
                     return 1;
                 }
                 return 0;
             });
-            for (var index=0, tLen=tabs.length; index < tLen; index++) {
-                chrome.tabs.move(tabs[index].tabId, index);
+            for (var i=0, tLen=tabs.length; i < tLen; i++) {
+                chrome.tabs.move(tabs[i].tabId, {index:i});
             }
         }
     }

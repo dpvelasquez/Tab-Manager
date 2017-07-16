@@ -93,7 +93,7 @@ div.tab button.active {
     margin-left: 10px;
 }
 
-#settingsPage button {
+.inputBtn {
     background: #007FFF;
     background-image: -webkit-linear-gradient(top, #007FFF, #007FFF);
     background-image: -moz-linear-gradient(top, #007FFF, #007FFF);
@@ -110,7 +110,7 @@ div.tab button.active {
     text-decoration: none;
 }
 
-#settingsPage button:hover {
+.inputBtn button:hover {
   background: #3cb0fd;
   text-decoration: none;
 }
