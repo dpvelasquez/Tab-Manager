@@ -39,10 +39,12 @@ document.addEventListener('DOMContentLoaded', function () {
         closedBtn.className += " active";
 
         // Remove previously added event listeners to prevent memory leak
-        var reloadButtons = document.getElementById("closedTabs").getElementsByTagName("input");
+        var closedTabs = document.getElementById("closedTabs");
+        var reloadButtons = closedTabs.getElementsByTagName("input");
         for (var i=0, rLen=reloadButtons.length; i < rLen; i++) {
             reloadButtons[i].removeEventListener('click', reloadPage);
         }
+        closedTabs.innerHTML = "";
 
         // Get closed tabs
         chrome.runtime.sendMessage({type:"closed"}, function (closed) {
@@ -66,8 +68,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function reloadPage(evt) {
             chrome.runtime.sendMessage({type:"reload", value:evt.target.Url});
-            document.getElementById("closedTabs").removeChild(evt.target.row);
             evt.target.removeEventListener('click', reloadPage);
+            evt.target.row.parentNode.removeChild(evt.target.row);
         }
     });
 
@@ -83,10 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("domainsPage").style.display = "block";
         domainsBtn.className += " active";
 
-        var removeButtons = document.getElementById("domainList").getElementsByTagName("input");
+        var domainList = document.getElementById("domainList");
+        var removeButtons = domainList.getElementsByTagName("input");
         for (var i=0, rLen=removeButtons.length; i < rLen; i++) {
             removeButtons[i].removeEventListener('click', removeDomain);
         }
+        domainList.innerHTML = "";
 
         //Get domains
         chrome.storage.sync.get("domains", function (items) {
@@ -113,8 +117,8 @@ document.addEventListener('DOMContentLoaded', function () {
             evt.target.domains.splice(index, 1);
             chrome.storage.sync.set({"domains":evt.target.domains});
             chrome.runtime.sendMessage({type:"update"});
-            document.getElementById("domainList").removeChild(evt.target.row);
             evt.target.removeEventListener('click', removeDomain);
+            evt.target.row.parentNode.removeChild(evt.target.row);
         }
     });
 
@@ -130,14 +134,16 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("pinnedPage").style.display = "block";
         pinnedBtn.className += " active";
 
-        var removeButtons = document.getElementById("pinnedTabs").getElementsByTagName("input");
+        var pinnedTabs = document.getElementById("pinnedTabs");
+        var removeButtons = pinnedTabs.getElementsByTagName("input");
         for (var i=0, rLen=removeButtons.length; i < rLen; i++) {
             removeButtons[i].removeEventListener('click', removePinned);
         }
+        pinnedTabs.innerHTML = "";
 
         // Get pinned tabs
         chrome.runtime.sendMessage({type:"tabs"}, function (openedTabs) {
-            for (var i=0, oTLen=openedTabs.length; i < oTlen; i++) {
+            for (var i=0, oTLen=openedTabs.length; i < oTLen; i++) {
                 if (openedTabs[i].pinned) {
                     (function () {
                         var row = document.getElementById("pinnedTabs").insertRow(0);
@@ -157,8 +163,8 @@ document.addEventListener('DOMContentLoaded', function () {
         
         function removePinned(evt) {
             chrome.runtime.sendMessage({type:"unpin", value:evt.target.tabId});
-            document.getElementById("pinnedTabs").removeChild(evt.target.row);
-            evt.target.removeEventListener('click', removeDomain);
+            evt.target.removeEventListener('click', removePinned);
+            evt.target.row.parentNode.removeChild(evt.target.row);
         }
     });
     
@@ -197,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     domains.push(domainUrl);
                     chrome.storage.sync.set({"domains":domains}, function() {
                         chrome.runtime.sendMessage({type:"update"});
+                        domainsBtn.click();
                     });
                 } else {
                     alert (domainUrl + "has already been whitelisted");

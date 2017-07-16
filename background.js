@@ -44,7 +44,7 @@
     var closeTabsNum;
     var sortTabs;
     var notifications;
-    var domians;
+    var domains;
 
     chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
         // Get saved settings
@@ -78,7 +78,7 @@
         chrome.tabs.query({}, function (openedTabs) {
             chrome.windows.getLastFocused(function(focusedWindow) {
                 for (var i=0, oTLen=openedTabs.length; i < oTLen; i++) {
-                    foundTab = new tab(openedTabs[i].id, openedTabs[i].url, openedTabs[i].favIconUrl,
+                    var foundTab = new tab(openedTabs[i].id, openedTabs[i].url, openedTabs[i].favIconUrl,
                                         openedTabs[i].title, openedTabs[i].pinned);
                     tabs.push(foundTab);
                     if (openedTabs[i].active && (openedTabs[i].windowId == focusedWindow.id)) {
@@ -254,9 +254,21 @@
         } else if (request.type == "closed") {
             respond(closed);
         } else if (request.type == "reload") {
-
+            var index = closed.map(function(e) {
+                return e.tabUrl;
+            }).indexOf(request.value);
+            closed.splice(index, 1);
+            chrome.tabs.create({url:request.value, active:false}, function (tab) {
+                var reloadedTab = new tab(tab.id, tab.url, tab.favIconUrl, tab.title, tab.pinned);
+                tabs.push(reloadedTab);
+                sortTabsAlpha();
+            });
         } else if (request.type == "unpin") {
-
+            var index = tabs.map(function (e) {
+                return e.tabId;
+            }).indexOf(request.value);
+            tabs[index].pinned = false;
+            tabs[index].timeout();
         } else if (request.type == "tabs") {
             respond(tabs);
         }
