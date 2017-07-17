@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     titleCell.innerHTML = closed[i].tabTitle;
                     var reloadButton = document.createElement('input');
                     reloadButton.type = "button";
-                    reloadButton.innerHTML = "Reload";
+                    reloadButton.value = "Reload";
                     row.appendChild(reloadButton);
                     reloadButton.addEventListener('click', reloadPage);
                     reloadButton.Url = closed[i].tabUrl;
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     domainCell.innerHTML = domains[i];
                     var removeButton = document.createElement('input');
                     removeButton.type = "button";
-                    removeButton.innerHTML = "Remove";
+                    removeButton.value = "Remove";
                     row.appendChild(removeButton);
                     removeButton.addEventListener('click', removeDomain);
                     removeButton.domains = domains;
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         pinnedCell.innerHTML = openedTabs[i].url;
                         var removeButton = document.createElement('input');
                         removeButton.type = "button";
-                        removeButton.innerHTML = "Remove";
+                        removeButton.value = "Remove";
                         row.appendChild(removeButton);
                         removeButton.addEventListener('click', removePinned);
                         removeButton.tabId = openedTabs[i].tabId;

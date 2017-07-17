@@ -1,40 +1,6 @@
 (function() {
     localStorage.removeItem("tabIds");
 
-    var tab = function (tabId, tabUrl, tabIcon, tabTitle, pin) {
-        this.tabId = tabId;
-        this.tabUrl = tabUrl;
-        this.tabIcon = tabIcon;
-        this.tabTitle = tabTitle;
-        this.pin = pin;
-        this.timeout = function () {
-            var domain = (new URL(this.tabUrl)).hostname.replace("www.","");
-            if (!this.pin && (tabs.length >= closeTabsNum) && (domains.indexOf(domain) == -1)) {
-                this.timeoutId = setTimeout(function () {
-                    chrome.tabs.remove(tabId);
-                    closed.push({tabUrl:this.tabUrl, tabIcon:this.tabIcon, tabTitle:this.tabTitle});
-                    if (notifications) {
-                        chrome.notifications.create("", {
-                            type:"basic",
-                            iconUrl:this.tabIcon,
-                            title:"Tab closed:",
-                            message:(this.tabTitle + "\n(" + this.tabUrl + ")"),
-                            eventTime:(Date.now() + 5000),
-                            buttons:[{title:"Reload"}]
-                        });
-                    }
-                }, timeout);
-            }
-        };
-        this.timeout();
-    };
-    tab.prototype.haltTimeout = function () {
-        if (this.timeoutId != undefined) {
-            clearTimeout(this.timeoutId);
-        }
-    };
-
-    var currentTab = new tab(0,"https://www.google.com","","",true);
     var tabs = [];
     var closed = [];
     var thresholdReached = false;
@@ -45,6 +11,44 @@
     var sortTabs;
     var notifications;
     var domains;
+
+    var tab = function (tabId, tabUrl, tabIcon, tabTitle, pin) {
+        this.tabId = tabId;
+        this.tabUrl = tabUrl;
+        this.tabIcon = tabIcon;
+        this.tabTitle = tabTitle;
+        this.pin = pin;
+        this.timeout();
+    };
+    tab.prototype.timeout = function () {
+        var domain = (new URL(this.tabUrl)).hostname.replace("www.","");
+        if (!this.pin && (tabs.length >= closeTabsNum) && (domains.indexOf(domain) == -1)) {
+            this.timeoutId = setTimeout(function () {
+                chrome.tabs.remove(this.tabId);
+                closed.push({tabUrl:this.tabUrl, tabIcon:this.tabIcon, tabTitle:this.tabTitle});
+                if (notifications) {
+                    chrome.notifications.create("", {
+                        type:"basic",
+                        iconUrl:this.tabIcon,
+                        title:"Tab closed:",
+                        message:(this.tabTitle + "\n(" + this.tabUrl + ")"),
+                        eventTime:(Date.now() + 5000),
+                        buttons:[{title:"Reload"}]
+                    });
+                    chrome.notifications.onButtonClicked.addListener(function (notificationId, buttonInd) {
+                        chrome.tabs.create({url:this.tabUrl, active:false});
+                    });
+                }
+            }, timeout);
+        }
+    };
+    tab.prototype.haltTimeout = function () {
+        if (this.timeoutId != undefined) {
+            clearTimeout(this.timeoutId);
+        }
+    };
+
+    var currentTab = new tab(0,"https://www.google.com","","",true);
 
     chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
         // Get saved settings
@@ -93,27 +97,31 @@
 
     // Change timers upon activation
     chrome.tabs.onActivated.addListener(function (activeInfo) {
-        var tabFound = false;
         for (var i=0, tLen=tabs.length; i < tLen; i++) {
             if (tabs[i].tabId == activeInfo.tabId) {
                 currentTab.timeout();
                 currentTab = tabs[i];
                 tabs[i].haltTimeout();
-                tabFound = true;
                 break;
             }
         }
-        if (!tabFound) {
-            chrome.tabs.get(activeInfo.tabId, function (activeTab) {
-                currentTab = new tab(activeTab.id, activeTab.url, activeTab.favIconUrl,
-                                        activeTab.title, false);
-                tabs.push(currentTab);
-                sortTabsAlpha();
-            });
-        }
     });
 
-    // Update tabs by removing removed tab
+    // Adds tabs to tabs list
+    chrome.tabs.onCreated.addListener(function (createdTab) {
+        var addedTab = new tab(createdTab.id, createdTab.url, createdTab.favIconUrl,
+                                createdTab.title, false);
+        tabs.push(addedTab);
+        sortTabsAlpha();
+        chrome.windows.getLastFocused(function(focusedWindow) {
+            if (createdTab.active && (createdTab.windowId == focusedWindow.id)) {
+                addedTab.haltTimeout();
+                currentTab = addedTab;
+            }
+        });
+    });
+
+    // Removes tab from tabs list
     chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
         for (var i=0, tLen=tabs.length; i < tLen; i++) {
             if (tabId == tabs[i].tabId) {
@@ -143,28 +151,28 @@
     });
 
     // Update url and pin status when user changes tab state
-    chrome.tabs.onUpdated.addListener(function (tabId, info, tab) {
+    chrome.tabs.onUpdated.addListener(function (tabId, info, updatedTab) {
         if (info.status == "complete" || info.pinned != undefined) {
             for (var i=0, tLen=tabs.length; i < tLen; i++) {
                 if (tabs[i].tabId == tabId) {
-                    if (info.status == "complete" && tab.url != undefined) {
+                    if (info.status == "complete" && updatedTab.url != undefined) {
                         var prevDomain = (new URL(tabs[i].tabUrl)).hostname;
-                        var currentDomain = (new URL(tab.url)).hostname;
+                        var currentDomain = (new URL(updatedTab.url)).hostname;
                         if (domains.indexOf(currentDomain) > -1) {
                             tabs[i].haltTimeout();
                         } else if (domains.indexOf(prevDomain) > -1) {
                             tabs[i].timeout();
                         }
-                        tabs[i].tabUrl = tab.url;
-                        tabs[i].tabIcon = tab.favIconUrl;
-                        tabs[i].tabTitle = tab.title;
+                        tabs[i].tabUrl = updatedTab.url;
+                        tabs[i].tabIcon = updatedTab.favIconUrl;
+                        tabs[i].tabTitle = updatedTab.title;
                         sortTabsAlpha();
                     }
                     if (info.pinned==true) {
                         tabs[i].pin = true;
                         tabs[i].haltTimeout();
                     } else if (info.pinned==false) {
-                        tabIds = JSON.parse(localStorage.getItem("tabIds"));
+                        var tabIds = JSON.parse(localStorage.getItem("tabIds"));
                         if (tabIds.indexOf(tabId) == -1) {
                             tabs[i].pin = false;
                             tabs[i].timeout();
@@ -254,21 +262,20 @@
         } else if (request.type == "closed") {
             respond(closed);
         } else if (request.type == "reload") {
-            var index = closed.map(function(e) {
-                return e.tabUrl;
-            }).indexOf(request.value);
-            closed.splice(index, 1);
-            chrome.tabs.create({url:request.value, active:false}, function (tab) {
-                var reloadedTab = new tab(tab.id, tab.url, tab.favIconUrl, tab.title, tab.pinned);
-                tabs.push(reloadedTab);
-                sortTabsAlpha();
-            });
+            for (var i=0, cLen=closed.length; i < cLen; i++) {
+                if (closed[i].tabUrl == request.value) {
+                    closed.splice(i, 1);
+                    break;
+                }
+            }
+            chrome.tabs.create({url:request.value, active:false});
         } else if (request.type == "unpin") {
-            var index = tabs.map(function (e) {
-                return e.tabId;
-            }).indexOf(request.value);
-            tabs[index].pinned = false;
-            tabs[index].timeout();
+            for (var i=0, tLen=tabs.length; i < tLen; i++) {
+                if (tabs[i].tabId == request.value) {
+                    tabs[i].pinned = false;
+                    tabs[i].timeout();
+                }
+            }
         } else if (request.type == "tabs") {
             respond(tabs);
         }
@@ -278,8 +285,8 @@
     function sortTabsAlpha() {
         if (sortTabs) {
             tabs.sort(function (tab_1, tab_2) {
-                tab_1Url = tab_1.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
-                tab_2Url = tab_2.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
+                var tab_1Url = tab_1.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
+                var tab_2Url = tab_2.tabUrl.replace(/^https?:\/\//,"").replace("www.","");
                 if (tab_1Url < tab_2Url) {
                     return -1;
                 } 

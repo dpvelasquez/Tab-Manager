@@ -3,13 +3,14 @@
     background:	#FAFAFA;
 }
 
+/*** Titlebar properties ***/
+.titleBar * {
+    background:#EFF0F1;
+}
+
 .titleBar {
     margin-left: 35%;
     width: 30%;
-}
-
-.titleBar * {
-    background:#EFF0F1;
 }
 
 .titleBar img {
@@ -24,8 +25,9 @@
     line-height: 70px;
 }
 
+/*** Tab viewer properties ***/
 /* Style the tab */
-div.tab {
+.tab {
     overflow: hidden;
     width: 312px;
     margin-left: 35%;
@@ -33,7 +35,7 @@ div.tab {
 }
 
 /* Style the buttons inside the tab */
-div.tab button {
+.tab button {
     background-color: inherit;
     float: left;
     border: none;
@@ -44,12 +46,12 @@ div.tab button {
 }
 
 /* Change background color of buttons on hover */
-div.tab button:hover {
+.tab button:hover {
     background-color: #ddd;
 }
 
 /* Create an active/current tablink class */
-div.tab button.active {
+.tab button.active {
     background-color: #ccc;
 }
 
@@ -57,11 +59,13 @@ div.tab button.active {
 .tabContent {
     background: #EFF0F1;
     width: 30%;
+    height: 345px;
     margin-left: 35%;
     display: none;
-    padding: 6px 0px;
+    position: relative;
 }
 
+/*** Settings page ***/
 .settings {
     background: #EFF0F1;
 }
@@ -93,6 +97,7 @@ div.tab button.active {
     margin-left: 10px;
 }
 
+/*** All buttons ***/
 .inputBtn {
     background: #007FFF;
     background-image: -webkit-linear-gradient(top, #007FFF, #007FFF);
@@ -113,4 +118,29 @@ div.tab button.active {
 .inputBtn button:hover {
   background: #3cb0fd;
   text-decoration: none;
+}
+
+/*** All tables ***/
+.urlList {
+    border-collapse: separate;
+    border-spacing: 100px 0;
+    width: 100%;
+}
+
+.urlList tr:nth-child(odd) td{background-color:#EFF0F1}
+
+.urlList tr td{
+    padding: 10px 0;
+    
+}
+
+.urlList tr button {
+    margin-top: 10px;
+}
+
+/*** Domain Page ***/
+#addDomainBtn {
+    position: absolute;
+    margin-left: 10px;
+    bottom: 10px;
 }
