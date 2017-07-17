@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         document.getElementById("settingsPage").style.display = "block";
         settingsBtn.className += " active";
-        // Get saved settings
+
         chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
-            document.getElementById("closeTime").value = items.inactiveTime;
+            document.getElementById("closeTime").value = items.inactiveTime / 60000; // Convert to minutes
             document.getElementById("autoCloseNum").value = items.closeTabsNum;
             document.getElementById("sortTabs").checked = items.sortTabs;
             document.getElementById("notifications").checked = items.notifications;
@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById("closedPage").style.display = "block";
         closedBtn.className += " active";
 
-        // Remove previously added event listeners to prevent memory leak
         var closedTabs = document.getElementById("closedTabs");
         var reloadButtons = closedTabs.getElementsByTagName("input");
         for (var i=0, rLen=reloadButtons.length; i < rLen; i++) {
@@ -46,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         closedTabs.innerHTML = "";
 
-        // Get closed tabs
+
         chrome.runtime.sendMessage({type:"closed"}, function (closed) {
             for (var i=0, cLen=closed.length; i < cLen; i++) {
                 (function () {
@@ -92,9 +91,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         domainList.innerHTML = "";
 
-        //Get domains
         chrome.storage.sync.get("domains", function (items) {
-            var domains = items["domains"];
+            var domains = items.domains;
             for (var i=0, dLen=domains.length; i < dLen; i++) {
                 (function () {
                     var row = document.getElementById("domainList").insertRow(0);
@@ -141,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         pinnedTabs.innerHTML = "";
 
-        // Get pinned tabs
         chrome.runtime.sendMessage({type:"tabs"}, function (openedTabs) {
             for (var i=0, oTLen=openedTabs.length; i < oTLen; i++) {
                 if (openedTabs[i].pinned) {
@@ -168,13 +165,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     
-    // Default options tab
     settingsBtn.click();
 
-    //Settings tab events
     document.getElementById("saveBtn").addEventListener('click', function () {
-        var closeTime = document.getElementById("closeTime").value;
-        var autoCloseNum = document.getElementById("autoCloseNum").value;
+        var closeTime = Number(document.getElementById("closeTime").value) * 60000; // Convert to ms
+        var autoCloseNum = Number(document.getElementById("autoCloseNum").value);
         var sortTabs = document.getElementById("sortTabs").checked;
         var notifications = document.getElementById("notifications").checked;
         chrome.storage.sync.set({"inactiveTime":closeTime, "closeTabsNum":autoCloseNum,
@@ -184,21 +179,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("cancelBtn").addEventListener('click', function() {
         chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications"], function (items) {
-            document.getElementById("closeTime").value = items.inactiveTime;
+            document.getElementById("closeTime").value = items.inactiveTime / 60000; // Convert to minutes
             document.getElementById("autoCloseNum").value = items.closeTabsNum;
             document.getElementById("sortTabs").checked = items.sortTabs;
             document.getElementById("notifications").checked = items.notifications;
         });
     });
 
-    // Domain Tab events
     document.getElementById("addDomainBtn").addEventListener('click', function() {
         var domainPrompt = prompt("Enter a valid url:" );
         if (domainPrompt != null) {
             var domainFormatted = domainPrompt.replace("www.", "").replace(/^https?:\/\//,"");
             var domainUrl = new URL("http://" + domainFormatted).hostname;
             chrome.storage.sync.get("domains", function (items) {
-                domains = items["domains"];
+                domains = items.domains;
                 if (domains.indexOf(domainUrl) == -1) {
                     domains.push(domainUrl);
                     chrome.storage.sync.set({"domains":domains}, function() {

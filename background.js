@@ -51,7 +51,6 @@
     var currentTab = new tab(0,"https://www.google.com","","",true);
 
     chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
-        // Get saved settings
         timeout = items["inactiveTime"];
         closeTabsNum = items["closedTabsNum"];
         sortTabs = items["sortTabs"];
@@ -78,7 +77,6 @@
             chrome.storage.sync.set({"domains":domains});
         }
 
-        // Get current tabs
         chrome.tabs.query({}, function (openedTabs) {
             chrome.windows.getLastFocused(function(focusedWindow) {
                 for (var i=0, oTLen=openedTabs.length; i < oTLen; i++) {
@@ -95,7 +93,6 @@
         });
     });
 
-    // Change timers upon activation
     chrome.tabs.onActivated.addListener(function (activeInfo) {
         for (var i=0, tLen=tabs.length; i < tLen; i++) {
             if (tabs[i].tabId == activeInfo.tabId) {
@@ -107,7 +104,6 @@
         }
     });
 
-    // Adds tabs to tabs list
     chrome.tabs.onCreated.addListener(function (createdTab) {
         var addedTab = new tab(createdTab.id, createdTab.url, createdTab.favIconUrl,
                                 createdTab.title, false);
@@ -121,12 +117,10 @@
         });
     });
 
-    // Removes tab from tabs list
     chrome.tabs.onRemoved.addListener(function (tabId, removeInfo) {
         for (var i=0, tLen=tabs.length; i < tLen; i++) {
             if (tabId == tabs[i].tabId) {
                 tabs[i].haltTimeout();
-                // In case onRemoved fires first to prevent memory leak
                 if(tabs[i].id == currentTab.id) {
                     currentTab.pin = true;
                 }
@@ -136,7 +130,6 @@
         }
     });
 
-    // Update current tab when user changes window
     chrome.windows.onFocusChanged.addListener(function (winId) {
         chrome.tabs.query({active:true, windowId:winId}, function (activeTab) {
             for (var i=0, tLen=tabs.length; i < tLen; i++) {
@@ -150,7 +143,6 @@
         });
     });
 
-    // Update url and pin status when user changes tab state
     chrome.tabs.onUpdated.addListener(function (tabId, info, updatedTab) {
         if (info.status == "complete" || info.pinned != undefined) {
             for (var i=0, tLen=tabs.length; i < tLen; i++) {
@@ -184,7 +176,6 @@
         }
     });
 
-    // Fired when number of tabs goes over threshold
     function OnTabsThresholdReached(state) {
         var evt = new CustomEvent('TabsThresholdReached', {detail:state});
         if((tabs.length > closeTabsNum) && !thresholdReached) {
@@ -200,7 +191,6 @@
         currentTab.haltTimeout();
     });
 
-    // Fired when number of tabs goes below threshold
     function OnTabsThresholdLowered(state) {
         var evt = new CustomEvent('TabsThresholdLowered', {detail:state});
         if((tabs.length <= closeTabsNum) && thresholdReached) {
@@ -230,7 +220,6 @@
             currentTab.pin = request.value;
         } else if (request.type == "update") {
             chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
-                // Get updated saved settings
                 var prevTimeout = timeout;
                 timeout = items["inactiveTime"];
                 closeTabsNum = items["closedTabsNum"];
@@ -239,17 +228,15 @@
                 var prevDomains = domains;
                 domains = items["domains"];
 
-                // Reflect changes
-                // timeout update
                 if (prevTimeout != timeout) {
                     for (var i=0, tLen=tabs.length; i < tLen; i++) {
                         tabs[i].haltTimeout();
                         tabs[i].timeout();
                     }
                 }
-                // sort update
+
                 sortTabsAlpha();
-                // domains update
+
                 for (var i=0, tLen=tabs.length; i < tLen; i++) {
                     var domain = (new URL(tabs[i].tabUrl)).hostname;
                     if (domains.indexOf(domain) > -1) {
@@ -281,7 +268,6 @@
         }
     });
 
-    // Helper function to sort tabs alphabetically 
     function sortTabsAlpha() {
         if (sortTabs) {
             tabs.sort(function (tab_1, tab_2) {
