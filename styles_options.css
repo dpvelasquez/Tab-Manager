@@ -125,13 +125,13 @@
     border-collapse: separate;
     border-spacing: 100px 0;
     width: 100%;
+    overflow:auto;
 }
 
 .urlList tr:nth-child(odd) td{background-color:#EFF0F1}
 
 .urlList tr td{
     padding: 10px 0;
-    
 }
 
 .urlList tr button {

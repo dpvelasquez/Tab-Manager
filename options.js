@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    //Tab Events
     var settingsBtn = document.getElementById("settingsBtn");
     var closedBtn = document.getElementById("closedBtn");
     var domainsBtn = document.getElementById("domainsBtn");
@@ -44,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
             reloadButtons[i].removeEventListener('click', reloadPage);
         }
         closedTabs.innerHTML = "";
-
 
         chrome.runtime.sendMessage({type:"closed"}, function (closed) {
             for (var i=0, cLen=closed.length; i < cLen; i++) {
@@ -141,11 +139,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         chrome.runtime.sendMessage({type:"tabs"}, function (openedTabs) {
             for (var i=0, oTLen=openedTabs.length; i < oTLen; i++) {
-                if (openedTabs[i].pinned) {
+                if (openedTabs[i].pin) {
                     (function () {
                         var row = document.getElementById("pinnedTabs").insertRow(0);
-                        var pinnedCell = row.insertCell(0);
-                        pinnedCell.innerHTML = openedTabs[i].url;
+                        var imageCell = row.insertCell(0);
+                        imageCell.innerHTML="<img src='" + openedTabs[i].tabIcon + "'/>";
+                        var titleCell = row.insertCell(1);
+                        titleCell.innerHTML = openedTabs[i].tabTitle;
                         var removeButton = document.createElement('input');
                         removeButton.type = "button";
                         removeButton.value = "Remove";

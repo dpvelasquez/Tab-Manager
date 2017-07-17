@@ -51,11 +51,11 @@
     var currentTab = new tab(0,"https://www.google.com","","",true);
 
     chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
-        timeout = items["inactiveTime"];
-        closeTabsNum = items["closedTabsNum"];
-        sortTabs = items["sortTabs"];
-        notifications = items["notifications"];
-        domains = items["domains"];
+        timeout = items.inactiveTime;
+        closeTabsNum = items.closedTabsNum;
+        sortTabs = items.sortTabs;
+        notifications = items.notifications;
+        domains = items.domains;
         if (timeout == undefined) {
             timeout = 1800000;
             chrome.storage.sync.set({"inactiveTime":timeout});
@@ -221,12 +221,12 @@
         } else if (request.type == "update") {
             chrome.storage.sync.get(["inactiveTime", "closeTabsNum", "sortTabs", "notifications", "domains"], function (items) {
                 var prevTimeout = timeout;
-                timeout = items["inactiveTime"];
-                closeTabsNum = items["closedTabsNum"];
-                sortTabs = items["sortTabs"];
-                notifications = items["notifications"];
+                timeout = items.inactiveTime;
+                closeTabsNum = items.closedTabsNum;
+                sortTabs = items.sortTabs;
+                notifications = items.notifications;
                 var prevDomains = domains;
-                domains = items["domains"];
+                domains = items.domains;
 
                 if (prevTimeout != timeout) {
                     for (var i=0, tLen=tabs.length; i < tLen; i++) {
@@ -259,10 +259,13 @@
         } else if (request.type == "unpin") {
             for (var i=0, tLen=tabs.length; i < tLen; i++) {
                 if (tabs[i].tabId == request.value) {
-                    tabs[i].pinned = false;
+                    tabs[i].pin = false;
                     tabs[i].timeout();
                 }
             }
+            var tabIds = JSON.parse(localStorage.getItem("tabIds"));
+            tabIds.splice(tabIds.indexOf(request.value), 1);
+            localStorage.setItem("tabIds", JSON.stringify(tabIds));
         } else if (request.type == "tabs") {
             respond(tabs);
         }
