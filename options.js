@@ -52,10 +52,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     imageCell.innerHTML="<img src='" + closed[i].tabIcon + "'/>";
                     var titleCell = row.insertCell(1);
                     titleCell.innerHTML = closed[i].tabTitle;
+                    var buttonCell = row.instertCell(2);
                     var reloadButton = document.createElement('input');
+                    buttonCell.appendChild(reloadButton);
                     reloadButton.type = "button";
                     reloadButton.value = "Reload";
-                    row.appendChild(reloadButton);
                     reloadButton.addEventListener('click', reloadPage);
                     reloadButton.Url = closed[i].tabUrl;
                     reloadButton.row = row;
@@ -96,10 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     var row = document.getElementById("domainList").insertRow(0);
                     var domainCell = row.insertCell(0);
                     domainCell.innerHTML = domains[i];
+                    var buttonCell = row.insertCell(1);
                     var removeButton = document.createElement('input');
+                    buttonCell.appendChild(removeButton);
                     removeButton.type = "button";
                     removeButton.value = "Remove";
-                    row.appendChild(removeButton);
                     removeButton.addEventListener('click', removeDomain);
                     removeButton.domains = domains;
                     removeButton.domainUrl = domains[i];
@@ -146,10 +148,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         imageCell.innerHTML="<img src='" + openedTabs[i].tabIcon + "'/>";
                         var titleCell = row.insertCell(1);
                         titleCell.innerHTML = openedTabs[i].tabTitle;
+                        var buttonCell = row.insertCell(2);
                         var removeButton = document.createElement('input');
+                        buttonCell.appendChild(removeButton);
                         removeButton.type = "button";
                         removeButton.value = "Remove";
-                        row.appendChild(removeButton);
                         removeButton.addEventListener('click', removePinned);
                         removeButton.tabId = openedTabs[i].tabId;
                         removeButton.row = row;

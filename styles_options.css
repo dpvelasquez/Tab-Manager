@@ -58,7 +58,7 @@
 /* Style the tab content */
 .tabContent {
     background: #EFF0F1;
-    width: 30%;
+    width: 25%;
     height: 345px;
     margin-left: 35%;
     display: none;
@@ -100,42 +100,42 @@
 /*** All buttons ***/
 .inputBtn {
     background: #007FFF;
-    background-image: -webkit-linear-gradient(top, #007FFF, #007FFF);
-    background-image: -moz-linear-gradient(top, #007FFF, #007FFF);
-    background-image: -ms-linear-gradient(top, #007FFF, #007FFF);
-    background-image: -o-linear-gradient(top, #007FFF, #007FFF);
-    background-image: linear-gradient(to bottom, #007FFF, #007FFF);
-    -webkit-border-radius: 0;
-    -moz-border-radius: 0;
-    border-radius: 0px;
-    font-family: Arial;
-    color: #ffffff;
-    font-size: 12px;
+    color: white;
     padding: 6px 12px 6px 12px;
+    font-size: 12px;
+    border-radius: 0px;
     text-decoration: none;
+    border: none;
+    cursor: pointer;
 }
 
 .inputBtn button:hover {
-  background: #3cb0fd;
   text-decoration: none;
 }
 
 /*** All tables ***/
+.tableWrapper {
+    background: #EFF0F1;
+    height: 301px;
+    overflow: auto;
+}
+
 .urlList {
-    border-collapse: separate;
-    border-spacing: 100px 0;
+    border-collapse: collapse;
+    border-spacing: 0 0;
     width: 100%;
-    overflow:auto;
+}
+
+tr { 
+  border: solid;
+  border-width: 1px 0;
+  border-color: black;
 }
 
 .urlList tr:nth-child(odd) td{background-color:#EFF0F1}
 
 .urlList tr td{
-    padding: 10px 0;
-}
-
-.urlList tr button {
-    margin-top: 10px;
+    padding: 18px;
 }
 
 /*** Domain Page ***/
